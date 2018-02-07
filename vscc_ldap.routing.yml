@@ -1,0 +1,31 @@
+vscc_ldap.content:
+  path: '/directory'
+  defaults:
+    _title: 'Employee Directory'
+    _form: '\Drupal\vscc_ldap\Form\ldapForm'
+  requirements:
+    _permission: 'access content'
+    
+vscc_ldap.byTitle:
+  path: '/directory/{dept}/{job_title}'
+  defaults:
+    _controller: '\Drupal\vscc_ldap\Controller\StaffController::byTitle'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      dept:
+        type: String
+      job_title:
+        type: String
+        
+vscc_ldap.byDept:
+  path: '/directory/{dept}'
+  defaults:
+    _controller: '\Drupal\vscc_ldap\Controller\StaffController::byDept'
+  requirements:
+    _permission: 'access content'
+  options:
+    parameters:
+      dept:
+        type: String

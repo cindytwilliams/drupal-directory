@@ -1,0 +1,6 @@
+name: VSCC Directory Module
+description: Pulls people finder entries from external database
+package: Custom
+
+type: module
+core: 8.x
