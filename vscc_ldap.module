@@ -64,7 +64,7 @@ function people_finder_results($last_name,$dept,$job_title) {
   while($record = $result->fetchAssoc()) 
   { 
     
-    // check if photo file exists at web.volstate.edu
+    // check if photo file exists
     $photoURL = 'http://XXXXX/_files/images/employees/';
     if (url_file_exists($photoURL . $record['photo'] . '.jpg'))
        $dirImg = $photoURL . $record['photo'] . '.jpg';
