@@ -1,2 +1,2 @@
 # drupal-directory
-search form, queries directory listings from external database and displays on a page
+Drupal 8 module that queries directory listings from external database, and allows users to search them via a form.
