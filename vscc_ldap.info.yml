@@ -1,6 +1,6 @@
-name: VSCC Directory Module
-description: Pulls people finder entries from external database
-package: Custom
+name: VSCC LDAP Module
+description: Pulls people finder entries from LDAP
+package: VSCC
 
 type: module
 core: 8.x

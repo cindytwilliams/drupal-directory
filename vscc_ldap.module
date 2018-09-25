@@ -1,14 +1,24 @@
 <?php
   
 /**
-	* search LDAP and display results
-	*
-	* @param string $last_name
-	* @param string $dept
-	*
-	* @return $results
-	*/
-	
+ * Implements hook_theme().
+ */
+function vscc_ldap_theme ($existing, $type, $theme, $path) {
+  return [
+    'vscc_ldap_page' =>
+    array(
+      'variables' => array(
+        'markup' => null,
+        'results' => null,
+      ), 
+      'template' => 'page--Directory'
+    )
+  ];
+}
+
+/**
+ * Queries LDAP for given search parameters
+ */
 function people_finder_results($last_name,$dept,$job_title) {
   
   // sanitize input
@@ -16,24 +26,28 @@ function people_finder_results($last_name,$dept,$job_title) {
 	$searchdept = (isset($dept) && $dept != '') ? filter_var($dept, FILTER_SANITIZE_STRING)  : '';
 	$searchtitle = (isset($job_title) && $job_title != '') ? filter_var($job_title, FILTER_SANITIZE_STRING)  : '';
   
-  /* connect to the database */
+  // connect to the vscc_web database
   \Drupal\Core\Database\Database::setActiveConnection('webdb');
   $connection = \Drupal\Core\Database\Database::getConnection();
   
-  /* query the people records from the database */
+  // query the people records from the database
   $query = $connection->select('people', 't')->fields('t', array('name','title','department','office','phone','email','photo'));
   
-  // search by department
+  // query by department
 	if(isset($dept) && !empty($dept)) {
-  	$query->condition('department', '%' . $dept . '%', 'LIKE');
+  	if (strtoupper($dept) == 'HEALTH SCIENCES') {
+    	$query->condition('department', '%' . $dept, 'LIKE');
+  	} else {
+    	$query->condition('department', '%' . $dept . '%', 'LIKE');
+    }
 	} 
 	
-	// search by last name
+	// query by last name
 	if(isset($last_name) && !empty($last_name)) {
 		$query->condition('name', $last_name . '%', 'LIKE');
 	} 
 	
-	// search by job title
+	// query by job title
 	if(isset($job_title) && !empty($job_title)) {
     $db_or = db_or();
   	if (strtoupper($job_title) == 'EMT') {
@@ -48,6 +62,12 @@ function people_finder_results($last_name,$dept,$job_title) {
   	} elseif (strtoupper($job_title) == 'FOREIGN LANGUAGE') {
     	$db_or->condition('title', '%Foreign%' , 'LIKE');
     	$db_or->condition('title', '%Spanish%' , 'LIKE');
+  	} elseif (strtoupper($job_title) == 'RADIOLOGY') {
+    	$db_or->condition('title', '%Radiology%' , 'LIKE');
+    	$db_or->condition('title', '%Radiologic%' , 'LIKE');
+  	} elseif (strtoupper($job_title) == 'VETERINARY') {
+    	$db_or->condition('title', '%Vet Tech%' , 'LIKE');
+    	$db_or->condition('title', '%Veterinary%' , 'LIKE');
   	} else {
   		$db_or->condition('title', '%' . $job_title . '%' , 'LIKE');
     }
@@ -57,59 +77,72 @@ function people_finder_results($last_name,$dept,$job_title) {
   // sort by name
   $query->orderBy('name', 'ASC');
     
-  // output the results
-  $results = '<div class="pplFinder">';
-    
+  // loop through results
+  $resultsArr = array();
   $result = $query->execute();
   while($record = $result->fetchAssoc()) 
-  { 
-    
-    // check if photo file exists
-    $photoURL = 'http://XXXXX/_files/images/employees/';
-    if (url_file_exists($photoURL . $record['photo'] . '.jpg'))
-       $dirImg = $photoURL . $record['photo'] . '.jpg';
+  {
+    // process values
+    $photoURL = 'https://web.volstate.edu/_files/images/employees/';
+    $imageURL = $photoURL . $record['photo'] . '.jpg';
+    if (url_file_exists($imageURL))
+       $dirImg = $imageURL;
     else
        $dirImg = $photoURL . '/noimg.jpg'; // display no image (gray avatar)
-       
-    $results = $results . '<div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 person">';    // person
-          
-      // image
-      $results = $results . '<div class="col-xs-4 col-sm-4 col-md-4">';
-        $results = $results . '<img src="'.$dirImg.'" alt="'. $record['name'] .'" />';
-        $results = $results . '</div>';
-        
-        // contact info
-        $results = $results . '<div class="col-xs-8 col-sm-8 col-md-8">';
-        $results = $results . '<h2><a href="mailto:' . $record['email'] . '" title="' . $record['name'] . '">' . $record['name'] . '</a></h2>';
-        $results = $results . '<div class="pfTitle">' . $record['title'] . '</div>';
-        
-        $results = $results . '<div class="pfContact">';
-        if (isset($record['department']) && $record['department'] !== '') {
-          $results = $results . '<div class="pfDept">' . $record['department'] . '</div>';
-        }
-        if (isset($record['office']) && $record['office'] !== '') {
-        $results = $results . $record['office'] . '<br>'; 
-        }
-        if (isset($record['phone']) && $record['phone'] !== '') {
-          $results = $results . $record['phone'];
-        }
-      $results = $results . '</div>'; // pfContact
-      $results = $results . '</div>'; // column
-    $results = $results . '</div>';   // person
-        
-  } // loop
+
+    if (isset($record['department']) && $record['department'] !== '') {
+      $department = $record['department'];
+    }
+    else {
+      $department = '';
+    }
     
-  $results = $results . '</div>';     // pplFinder
+    if (isset($record['office']) && $record['office'] !== '') {
+      $office = $record['office'];
+    }
+    else {
+      $office = '';
+    }
+    
+    if (isset($record['phone']) && $record['phone'] !== '') {
+      $phone = $record['phone'];
+    }
+    else {
+      $phone = '';
+    }
+    
+    // store values in an array
+    $resultsArr[] = array(
+  		'photo' => $dirImg,
+  		'name' => $record['name'],
+  		'email' => $record['email'],
+  		'title' => $record['title'],
+  		'department' => $department,
+  		'office' => $office,
+  		'phone' => $phone
+
+  	);
+  } // end while
   
   // set connection back to main Drupal database
   \Drupal\Core\Database\Database::setActiveConnection();
 
-	return $results;   // output results to the page
+  // return the array
+	return $resultsArr;
 
 }
 
-// check if url file exists
+
+/**
+ * Check if external URL exists
+ */
 function url_file_exists($url) {
-  $headers=get_headers($url);
-  return stripos($headers[0],"200 OK")?true:false;
+  $url = str_replace(' ', '%20', $url);
+  $ch = curl_init($url);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+  curl_setopt($ch, CURLOPT_NOBODY, true);
+  curl_exec($ch);
+  $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);  
+  curl_close($ch);
+  if($httpcode>=200 && $httpcode<300){  return true; } else { return false; } 
 }

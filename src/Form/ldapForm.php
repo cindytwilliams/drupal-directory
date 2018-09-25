@@ -28,17 +28,8 @@ class ldapForm extends FormBase {
       '#title' => $this->t('Last Name'),
     );
     $form['last_name']['#weight'] = -3;  // position of field
-    
-    // query departments from taxonomy
-    /*$depts = array();
-    $depts[] = '';
-    $vid = 'departments';
-    $terms =\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
-    foreach ($terms as $term) {
-      $depts[] = $term->name;
-    }*/
-    
-    // query departments from database
+
+    // query departments from vscc_web database
     $connection = \Drupal\Core\Database\Database::getConnection('default','webdb');
     $query = $connection->select('people', 't')->fields('t', array('department'));
     $query->orderBy('department', 'ASC');
@@ -92,8 +83,15 @@ class ldapForm extends FormBase {
       $last_name = $values['last_name'];
       $dept = $values['dept'];
       $job_title = $values['job_title'];
-      $results = people_finder_results($last_name,$dept,$job_title);     // call function that searches LDAP
-      $form['result'] = ['#markup' => $results];
+      
+      // call function that searches LDAP
+      $results = people_finder_results($last_name,$dept,$job_title);
+      
+      // send results to Twig template
+      $form['result'] = [
+        '#theme' => 'vscc_ldap_page',
+        '#results' => $results
+      ];  
     }
 
     return $form;

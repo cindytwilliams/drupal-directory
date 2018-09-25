@@ -1,0 +1,24 @@
+<div class="pplFinder">
+
+
+  {% for key, person in results %}
+  
+    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6 person">
+      <div class="col-xs-4 col-sm-4 col-md-4"><img src="{{person.photo}}" alt="{{person.name}}" /></div>
+      <div class="col-xs-8 col-sm-8 col-md-8">
+        <h2><a href="mailto:{{person.email}}" title="{{person.name}}">{{person.name}}</a></h2>
+        <div class="pfTitle">{{person.title}}</div>
+        
+        <div class="pfContact">
+          <div class="pfDept">{{person.department}}</div>
+          {{person.office}}<br>
+          {{person.phone}}
+        </div>
+        
+      </div>
+    
+    </div>
+  {% endfor %}  
+    
+    
+</div>

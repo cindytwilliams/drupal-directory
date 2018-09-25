@@ -1,7 +1,6 @@
 <?php
 
 namespace Drupal\vscc_ldap\Controller;
-
 use Drupal\Core\Controller\ControllerBase;
 
 class StaffController extends ControllerBase {
@@ -14,18 +13,31 @@ class StaffController extends ControllerBase {
    * @return array
   */
   public function byDept(String $dept) {
-     
+    
+    // for divisions, display "faculty" in the title
+    if (
+      (strpos(strtolower($dept), 'business') !== false) 
+      || (strpos(strtolower($dept), 'health sciences') !== false)
+      || (strpos(strtolower($dept), 'humanities') !== false)
+      || (strpos(strtolower($dept), 'mathematics') !== false)
+      || (strpos(strtolower($dept), 'social science') !== false)
+      ) {
+      $pageTitle = ucwords($dept) . ' Faculty & Staff';
+    } 
+    else {
+      $pageTitle = ucwords($dept) . ' Staff';
+    }    
+    
+    // call function that searches LDAP
     $results = people_finder_results('',$dept,'');
     
-    $build = array();
-    $build['#markup'] = $results;
-    if ((strpos(strtolower($dept), 'division') !== false) || (strpos(strtolower($dept), 'health sciences') !== false)) {
-      $build['#title'] = ucwords($dept) . ' Faculty & Staff';
-    } else {
-      $build['#title'] = ucwords($dept) . ' Staff';
-    }    
-    return $build;
-    
+    // send results to Twig template
+    return array(
+      '#theme' => 'vscc_ldap_page',
+      '#type' => 'markup',
+      '#title' => $pageTitle,
+      '#results' => $results,
+    );    
   }
   
   /**
@@ -37,21 +49,29 @@ class StaffController extends ControllerBase {
   */
   public function byTitle(String $dept, String $job_title) {
      
-    $results = people_finder_results('',$dept,$job_title);
-    
-    $build = array();
-    $build['#markup'] = $results;
     if ((strpos(strtolower($dept), 'division') !== false) || (strpos(strtolower($dept), 'health sciences') !== false)) {
       if (strpos(strtolower($job_title), 'faculty') !== false) {
-        $build['#title'] = ucwords($job_title);
-      } else {
-        $build['#title'] = ucwords($job_title) . ' Faculty';
+        $pageTitle = ucwords($job_title);
+      } 
+      else {
+        $pageTitle = ucwords($job_title) . ' Faculty';
       }
-    } else {
-      $build['#title'] = ucwords($job_title) . ' Staff';
+    } 
+    else {
+      $pageTitle = ucwords($job_title) . ' Staff';
     }
-    return $build;
     
+    // call function that searches LDAP
+    $results = people_finder_results('',$dept,$job_title);
+    
+    // send results to Twig template
+    return array(
+      '#theme' => 'vscc_ldap_page',
+      '#type' => 'markup',
+      '#title' => $pageTitle,
+      '#results' => $results,
+    );  
+        
   }
   
  }
